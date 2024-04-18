@@ -1,3 +1,5 @@
+# This script originates from Torch. 
+# To build our proposed attention mechanism, we modify the input of the 'multi_head_attention_forward' function (1192 line).
 import warnings
 from typing import Optional, Tuple
 
