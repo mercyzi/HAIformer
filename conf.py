@@ -1,4 +1,4 @@
-# this is all the parameters to train our decoder-encoder based agent
+# This is all the parameters. 
 import argparse
 
 # parameters (training)
@@ -14,13 +14,10 @@ test_dataset = train_dataset
 
 # check validity
 ds_range = ['dxy','mz10', 'muzhi', 'MDD']
-# train_ds_range = ds_range + ['all']
 
 assert train_dataset in ds_range
 assert test_dataset in ds_range
 
-# gpu device number
-# device_num = {'dxy': 0, 'mz4': 1, 'mz10': 2}.get(train_dataset)
 device_num = 0
 
 # train/test data path
@@ -37,17 +34,14 @@ if test_dataset != 'all':
 else:
     for ds in ds_range[1:]:
         test_path.append('data/{}/test_set.json'.format(ds))
-# test_path = ['data/{}/test_set.json'.format(test_dataset)]
 
 best_pt_path = 'saved/{}/best_pt_exe_model.pt'.format(train_dataset)
 last_pt_path = 'saved/{}/last_pt_exe_model.pt'.format(train_dataset)
 
 pre_gnn_path = 'data/{}/pregnn.pt'.format(train_dataset)
 gnn_nodes_num = {'dxy': 47, 'mz10': 322, 'muzhi': 72, 'MDD': 122}.get(train_dataset)
-# 2: 82.43; 3
 
 # global settings
-# suffix = {'0': '-Negative', '1': '-Positive', '2': '-Not-Sure'}
 suffix = {'0': '-Negative', '1': '-Positive', '2': '-Negative'}
 min_sx_freq = None
 max_voc_size = None
@@ -55,11 +49,9 @@ keep_unk = True
 digits = 4
 
 # model hyperparameter setting
-# group 1: position embeddings
 pos_dropout = 0.1
 pos_max_len = 80
 
-# group 2: transformer decoder
 sx_one_hot = False
 attr_one_hot = False
 num_attrs = 5
@@ -123,14 +115,11 @@ data_aug = False
 emphasis_factor = 1.0
 dec_add_pos = False
 
-
 ratio1 = 1
 ratio2 = 1
 ratio3 = 1
 ratio4 = 1
 
-#mdd: 9:0.9113; 7:0.9121; 5: 0.9092; 3: ; 1:0.9100
-#dxy: 9: ; 7:0.8962 ; 5: ; 3: ; 1:0.9
 alpha_graph = 0.5
 alpha_add = (1 - alpha_graph)/2
 
