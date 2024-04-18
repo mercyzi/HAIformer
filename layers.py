@@ -1,4 +1,4 @@
-# This is all the neural networks.
+# These are all neural networks.
 import os
 import torch
 import torch.nn as nn
