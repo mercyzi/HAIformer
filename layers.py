@@ -1,4 +1,3 @@
-# this script is the definition for neural layers
 import os
 import torch
 import torch.nn as nn
@@ -129,15 +128,14 @@ class SymptomDecoderXFMR(nn.Module):
         # 初始化输入
         _, bsz = batch['exp_sx_ids'].shape
         sx_ids = torch.cat([batch['exp_sx_ids'], ps.init_sx_ids(bsz)])
-        # assert 0
+        
         attr_ids = torch.cat([batch['exp_attr_ids'], ps.init_attr_ids(bsz)])
         exe_ids = torch.cat([batch['exp_exe_ids'], ps.init_attr_ids(bsz)])
         he_value = []
         act_role = []
         # 初始化重复分数，手动将选择特殊symptom的action的概率设置为无穷小
         repeat_score = self.init_repeat_score(bsz, sv, batch)
-        # print(repeat_score[0])
-        # assert 0
+        
         actions, log_probs = [], []
         if inference:
             hg.change_ability(human_ability)
@@ -271,14 +269,11 @@ class SymptomEncoderXFMR(nn.Module):
         mp_mask = (1 - sx_ids.eq(pad_idx).int())
         
         mp_mask_ = mp_mask.unsqueeze(-1).expand(seq_len, batch_size, emb_dim)
-        # print(mp_mask_.shape)
-        # print(torch.sum(outputs * mp_mask_, dim=0).shape)
-        # print(torch.sum(mp_mask, dim=0).unsqueeze(-1).shape)
+        
         avg_outputs = torch.sum(outputs * mp_mask_, dim=0) / torch.sum(mp_mask, dim=0).unsqueeze(-1)
-        # print(avg_outputs.shape)
+        
         features = self.dis_fc(avg_outputs)
-        # print(features.shape)
-        # assert 0
+        
         return features
 
     def predict(self, sx_ids, attr_ids, pad_idx):
@@ -438,24 +433,15 @@ class MyGAT(torch.nn.Module):
     def __init__(self, hidden_channels):
         super(MyGAT, self).__init__()
         self.user_emb = torch.nn.Embedding(gnn_nodes_num, hidden_channels)
-        # self.attr_emb = torch.nn.Embedding(5, hidden_channels)
+        
         self.GAT1 = TransformerConv(hidden_channels, hidden_channels)
-        # self.GAT2 = GCNConv(hidden_channels, hidden_channels)
-        # self.GAT3 = GATv2Conv(hidden_channels, hidden_channels)
-        # self.GAT4 = GATv2Conv(hidden_channels, hidden_channels)
-        # self.GAT5 = GATv2Conv(hidden_channels, hidden_channels)
-        # self.GAT6 = GATv2Conv(hidden_channels, hidden_channels)
-        # self.GAT7 = GATv2Conv(hidden_channels, hidden_channels)
-        # self.dropout1 = nn.Dropout(p=0.1)
+        
         self.linear1 = nn.Linear(hidden_channels, hidden_channels)
  
 
     def forward(self, x, edge_index):
         x = self.GAT1(x=self.user_emb(x), edge_index=edge_index)
-        # x = functional.relu(x)
-        # x = self.linear1(x)
-        # x = self.GAT2(x, edge_index)
-        # x = self.linear1(x)
+        
         
         return x
 # pretrain gnn model
@@ -476,7 +462,7 @@ class PreGnn(torch.nn.Module):
             x_neighbor = edge_index[1][edge_index[0] == x_id]
             new_x.append(x[x_neighbor].sum(0))           
         new_x = torch.stack(new_x).to(device)
-        # x = self.linear0(new_x)
+        
         x = self.linear1(new_x)
         
         return functional.softmax(x,dim=-1)
@@ -523,7 +509,7 @@ class ComSimModel(torch.nn.Module):
         # x = new_x
         x = self.linear0(new_x)
         
-        # # 计算余弦相似度V
+        # 计算余弦相似度V
         cosine_sim_matrix = torch.matmul(x, src.permute(1, 2, 0))/torch.sqrt(torch.tensor(embed_dim, dtype=torch.float32))
         
         # gate_value = self.relu(self.linear(torch.cat((x, src.permute(1, 0, 2)), dim=-1)))
@@ -579,10 +565,8 @@ class CustomTransformerEncoderLayer(nn.Module):
             other_name="src_mask",
             target_type=src.dtype
         )
-        # print(src_key_padding_mask.size())
-        # assert 0
-        x = src
         
+        x = src
         
         # 自定义的权重，这里使用随机生成的权重，你可以根据任务和需求调整
         if self.exe_ids is not None:
@@ -594,9 +578,6 @@ class CustomTransformerEncoderLayer(nn.Module):
 
         modified_attn_output = attn_output #+ gate_value * custom_weights
 
-        # print(modified_attn_output)
-        # if attn_output.shape[0] == 15:
-        #     assert 0
         x = self.norm1(modified_attn_output)
         x = self.norm2(x + self._ff_block(x))
 
@@ -662,7 +643,6 @@ class CustomTransformerEncoder(nn.Module):
         graph_score, gate_value = self.EncoderLayer4.gnnmodel(batch_nodes,batch_nodes_exe,layer3_val)
         layer4_val = self.EncoderLayer4(layer3_val, src_mask, src_key_padding_mask, graph_score= graph_score, gate_value=gate_value)
 
-        # y = self.pooling(layer4_val.permute(1, 2, 0)).view(1, layer4_val.size()[1], layer4_val.size()[2])
         return layer4_val
     
 
