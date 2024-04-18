@@ -4,7 +4,6 @@ from utils import load_data
 import json
 from layers import Agent
 from utils import make_dirs,write_data
-# from sklearn.metrics import accuracy_score
 import torch.optim.lr_scheduler as lr_scheduler
 from data_utils import *
 from conf import *
@@ -17,7 +16,6 @@ record = {}
 train_samples = train_s
 test_samples = test_s
 
-# muzhi:36; mdd:116; mz10:138
 real_prior_feat = prior_feat[:prior_feat_nums]
 
 for i, sample in enumerate(train_samples):
@@ -50,8 +48,6 @@ num_sxs, num_dis = sv.num_sxs, dv.num_dis
 
 if data_aug is True:
     train_samples = data_augmentation(train_samples, real_prior_feat)
-# train_samples = enrich_data(train_samples)
-# print(len(train_samples))
 train_ds = SymptomDataset(train_samples, sv, dv, keep_unk=False, add_tgt_start=True, add_tgt_end=True)
 train_ds_loader = DataLoader(train_ds, batch_size=train_bsz, num_workers=num_workers, shuffle=True, collate_fn=lm_collater)
 
@@ -83,22 +79,13 @@ for i in range(1):
         for batch in train_ds_loader:
             # break
             sx_ids, attr_ids, exe_ids, labels = batch['sx_ids'], batch['attr_ids'], batch['exe_ids'], batch['labels']
-            
             seq_len, bsz = sx_ids.shape
-            # sx_ids_mask, attr_ids_mask, labels_mask = make_pretrain_feat(sx_ids, attr_ids, sv)
             shift_sx_ids = torch.cat([sx_ids[1:], torch.zeros((1, bsz), dtype=torch.long, device=device)], dim=0)
-            # print(dec_sx_ids)
-            # print(dec_attr_ids)
-            # print(shift_sx_ids)
-            # assert 0
             # symptom inquiry
             mask = torch.triu(torch.ones(seq_len, seq_len, device=device) * float('-inf'), diagonal=1)
             si_outputs = model.symptom_decoder.get_features(model.symptom_decoder(sx_ids, attr_ids, exe_ids, mask=mask))
             si_loss = si_criterion(si_outputs.view(-1, num_sxs), shift_sx_ids.view(-1))
-            # sx_ids_mask, attr_ids_mask, exe_ids_mask, labels_mask = make_pretrain_feat(sx_ids, attr_ids, exe_ids, sv)
-
-            # si_outputs_mask = model.symptom_decoder.get_features(model.symptom_decoder(sx_ids_mask, attr_ids_mask, exe_ids_mask, mask=mask))
-            # si_loss += si_criterion(si_outputs_mask.view(-1, num_sxs), labels_mask.view(-1))
+            
             # disease classification
             si_sx_feats, si_attr_feats = make_features_xfmr(
                 sv, batch, sx_ids.permute(1, 0), attr_ids.permute(1, 0), merge_act=False, merge_si=True)
