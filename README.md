@@ -18,7 +18,6 @@ conda env create --name HAIformer --file environment.yml
 ```
 
 ### Train Symptom-Graph
-
 ```yaml
 # dataset: Either MDD, mz10, dxy, muzhi.
 python train_gnn.py \
@@ -26,14 +25,12 @@ python train_gnn.py \
 ```
 
 ### Pretrain
-
 ```yaml
 python pretrain.py \
 -data MDD 
 ```
 
 ### Train
-
 ```yaml
 python train.py \
 -d MDD 
