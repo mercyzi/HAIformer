@@ -1,4 +1,4 @@
-# This is all the parameters. 
+# These are all the parameters. 
 import argparse
 
 # parameters (training)
