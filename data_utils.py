@@ -713,10 +713,6 @@ def rule_agent(samples, cm, sv: SymptomVocab, max_turn: int, exclude_exp: bool =
                 for index in np.flip(np.argsort(sim)):
                     if index not in previous:
                         break
-            # if index in imp_sx_ids and imp_attr_ids[imp_sx_ids.index(index)] == sv.SX_ATTR_POS_IDX:
-            #     current.add(index)
-            # if index in imp_sx_ids:
-            #     current.add(index)
             previous.add(index)
             actions.append(index)
         num_hits += len([sx_id for sx_id in actions if sx_id in imp_sx_ids])
@@ -748,7 +744,6 @@ class RewardDistributor:
         self.dscom = dscom
 
     def compute_sr_priori_reward(self, action, dis_id, eps=0.0):
-        # 先验奖励，push智能体不生成无关的症状（由语料库中的疾病-症状共现矩阵决定）
         reward = []
         for act in action:
             if self.dscom[dis_id, act] > eps:
@@ -758,10 +753,6 @@ class RewardDistributor:
         return reward
 
     def compute_sr_ground_reward(self, action, imp_sx, imp_attr, num_hit, suc_diag):
-        # 真实奖励，push智能体生成ground truth中的症状
-        # 1. 如果智能体生成了隐形症状中包含的关键症状，给予正向奖励
-        # 2. 如果智能体生成了隐形症状中包含的症状，给予0奖励
-        # 3. 如果智能体生成了隐形症状中不包含的症状，给予负向奖励
         reward = []
         history_acts, num_repeat = set(), 0
         for i, act in enumerate(action):
@@ -788,14 +779,10 @@ class RewardDistributor:
 
     @staticmethod
     def compute_sr_global_reward(action, imp_sx, num_hit, eps=1e-3):
-        # 全局奖励，push智能体生成与真实情况下，顺序尽可能类似的序列
-        # 1.非序列相关奖励（杰卡德距离）
         set(action).intersection()
         distance = (num_hit + eps) / (len(set(action).union(set(imp_sx))) + eps)
-        # 2.序列相关奖励（BLEU，其中denoise action是action和隐形症状序列中的公共子序列）
         denoise_action = [act for act in action if act in imp_sx]
         bleu = sentence_bleu([imp_sx], denoise_action, smoothing_function=SmoothingFunction().method1)
-        # 这些奖励仅分配到命中的那些症状（）
         distance = [0 if act in imp_sx else 0 for act in action]
         bleu = [0 if act in imp_sx else 0 for act in action]
         return distance, bleu, denoise_action
@@ -820,7 +807,6 @@ class RewardDistributor:
         # after doc ai
         doc_ai_key_sx = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
         doc_ai_all_sx = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-        # print(act_role)
         act_all_id = 0
         he_val = 0
         # assert 0
@@ -828,7 +814,6 @@ class RewardDistributor:
         for idx in range(batch_size):
             if early_stop is not None:
                 early_stop_seq = to_numpy_(early_stop)
-            # break
             # 得到隐形症状序列的yes/no/not sure子序列
             imp_sx, imp_attr, imp_pos_sx, imp_neg_sx, imp_ns_sx = self.truncate_imp_sx(idx, np_batch)
             # 得到动作序列（通过结束症状id进行截断）
@@ -846,8 +831,6 @@ class RewardDistributor:
             action_role = act_role[idx]
             last_human = False
 
-            # print(action_role)
-            # assert 0
             # 记录每次问症状的准确率
             if len(action) != 0:
                 for vi in range(len(action)):
@@ -975,19 +958,6 @@ def extract_features(sx_ids, attr_ids, sv: SymptomVocab):
             if attr_id not in [sv.SX_ATTR_PAD_IDX, sv.SX_ATTR_NM_IDX]:
                 sx_feat.append(sx_id)
                 attr_feat.append(attr_id)
-                # if train_dataset != 'mz10':
-                #     sx_feat.append(sx_id)
-                #     attr_feat.append(attr_id)
-                # else:
-                #         # 去除无效的症状和属性pairs
-                #     if sx_id in sv.prior_sx_attr.keys() and attr_id == sv.prior_sx_attr[sx_id]:
-                #         # 只保留True的sx(key)
-                #         sx_feat.append(sx_id)
-                #         attr_feat.append(attr_id)
-                #     if sx_id in sv.prior_sx_attr_2.keys() and attr_id == sv.prior_sx_attr_2[sx_id]:
-                #         # 只保留False的sx(key)
-                #         sx_feat.append(sx_id)
-                #         attr_feat.append(attr_id)
                 
         sx_feats.append(to_tensor_(sx_feat))
         attr_feats.append(to_tensor_(attr_feat))
@@ -1027,29 +997,12 @@ def extract_features_seq(sx_ids, attr_ids, sv: SymptomVocab):
     for idx in range(len(sx_ids)):
         sx_feat, attr_feat, exe_feat = [sv.start_idx], [sv.SX_ATTR_PAD_IDX], [sv.SX_ATTR_PAD_IDX]
         seq_len = len(sx_ids[idx])
-        # print(seq_len-num_turns)
-        # print(np.where(sx_ids[idx]==1)[0][0])
-        # print(sx_ids[idx])
-        # assert 0
         for sx_id, attr_id in zip(sx_ids[idx], attr_ids[idx]):
             if sx_id == sv.end_idx:
                 break
             if attr_id not in [sv.SX_ATTR_PAD_IDX, sv.SX_ATTR_NM_IDX]:
                 sx_feat.append(sx_id)
                 attr_feat.append(attr_id)
-                # if train_dataset != 'mz10':
-                #     sx_feat.append(sx_id)
-                #     attr_feat.append(attr_id)
-                # else:
-                #         # 去除无效的症状和属性pairs
-                #     if sx_id in sv.prior_sx_attr.keys() and attr_id == sv.prior_sx_attr[sx_id]:
-                #         # 只保留True的sx(key)
-                #         sx_feat.append(sx_id)
-                #         attr_feat.append(attr_id)
-                #     if sx_id in sv.prior_sx_attr_2.keys() and attr_id == sv.prior_sx_attr_2[sx_id]:
-                #         # 只保留False的sx(key)
-                #         sx_feat.append(sx_id)
-                #         attr_feat.append(attr_id)
             if sv.end_idx in sx_ids[idx]:
                 seq_end = np.where(sx_ids[idx]==sv.end_idx)[0][0] - 1
             else:
@@ -1214,18 +1167,12 @@ class HumanAgent:
         return mask_log, mask_valid
     
     def ask(self, imp_sx_list, sx_ids_list, imp_key_list):
-        # print(sx_ids_list)
-        # print(imp_sx_list)
-        # print(imp_sx_list[1:imp_sx_list.index(self.sv.end_idx)])
         repeat_symptoms = list(set(sx_ids_list).intersection(set(imp_sx_list[1:imp_sx_list.index(self.sv.end_idx)])))
         candidate_symptoms = [x for x in imp_sx_list[1:imp_sx_list.index(self.sv.end_idx)] if x not in repeat_symptoms]
         candidate_key_symptoms = list(set(imp_key_list).intersection(set(candidate_symptoms)))
         if len(candidate_symptoms) == 0:
             return self.sv.end_idx, 1
         greedy = random.random()
-        # print(greedy)
-        # print(sx_ids_list)
-        # print(candidate_symptoms)
         if greedy < self.ability:
             act = random.choice(candidate_symptoms)
             if len(candidate_key_symptoms) != 0 and greedy < key_hp:
@@ -1262,25 +1209,6 @@ def data_augmentation(samples: list = None, real_prior_feat = None):
         for i in range(20):
             origin_sample = copy.deepcopy(sample)
             data_samples.append(sample)
-        # dis = sample['label']
-        # origin_sample = copy.deepcopy(sample)
-        # data_samples.append(origin_sample)
-        # imp_set = {}
-        # mask = np.random.rand(len(sample['imp_sxs'].keys())) < random_masking
-        # # print(mask)
-        # i = 0
-        # for k, v in sample['imp_sxs'].items():
-        #     if mask[i] == True:
-        #         # candidate = [sx for sx in dis2sx[dis] if sx not in sample['exp_sxs'].keys() and sx not in sample['imp_sxs'].keys()]
-        #         # imp_set[random.choice(candidate)] = v
-        #         imp_set[k] = v
-        #     else:
-        #         imp_set[k] = v
-        #     i = i + 1
-        # sample['imp_sxs'] = imp_set
-        # data_samples.append(sample)
-        # print(data_samples)
-        # assert 0
     return data_samples
 
 def data_augmentation_traindata(samples: list = None, real_prior_feat = None):
@@ -1303,26 +1231,6 @@ def data_augmentation_traindata(samples: list = None, real_prior_feat = None):
     import copy
     for sample in samples:
         pass
-        
-        # dis = sample['label']
-        # origin_sample = copy.deepcopy(sample)
-        # data_samples.append(origin_sample)
-        # imp_set = {}
-        # mask = np.random.rand(len(sample['imp_sxs'].keys())) < random_masking
-        # # print(mask)
-        # i = 0
-        # for k, v in sample['imp_sxs'].items():
-        #     if mask[i] == True:
-        #         # candidate = [sx for sx in dis2sx[dis] if sx not in sample['exp_sxs'].keys() and sx not in sample['imp_sxs'].keys()]
-        #         # imp_set[random.choice(candidate)] = v
-        #         imp_set[k] = v
-        #     else:
-        #         imp_set[k] = v
-        #     i = i + 1
-        # sample['imp_sxs'] = imp_set
-        # data_samples.append(sample)
-        # print(data_samples)
-        # assert 0
     return data_samples
 import numpy as np
 import pickle
@@ -1346,15 +1254,7 @@ def enrich_data(train_set):
             train_set.append(item)
 
     return train_set
-# if self.train_mode is True and random.random() < 0.5:
-        #     mask = np.random.rand(len(exp_sx_ids)) < random_masking
 
-        #     input_sequence = np.array(exp_sx_ids)
-        #     input_sequence[mask] = 0  # 使用0来表示遮挡
-        #     exp_sx_ids= list(input_sequence)
-        #     input_sequence = np.array(exp_attr_ids)
-        #     input_sequence[mask] = 0  # 使用0来表示遮挡
-        #     exp_attr_ids= list(input_sequence)
 # 构造图
 def create_graph(sx_ids, attr_ids, sv):
     edge_label_index = [[],[]]
@@ -1391,8 +1291,6 @@ def create_graph(sx_ids, attr_ids, sv):
             nodes.append(sx_ids[seq_id][indx].item())
             
             node_id = node_id + 1
-        # if seq_id == 0 :
-        #     print(edge_label_index)
     return data.Data(edge_index=torch.LongTensor(edge_label_index), x=torch.LongTensor(nodes))
 
 def create_train_graph(train_ds):
@@ -1431,65 +1329,7 @@ def create_train_graph(train_ds):
                     edge_label_index[1].append(a)
                     edge_label_index[0].append(b)
             valid_nodes.append(a)
-    # for sample in train_ds:
-    #     exp_sx_ids = sample['exp_sx_ids']
-    #     imp_sx_ids = sample['imp_sx_ids'][1:-1]
-    #     key_imp_sx_ids = sample['key_imp_sx_ids']
-    #     valid_nodes = []
-    #     for i in exp_sx_ids.cpu().tolist():
-    #         # i->j
-    #         for j in imp_sx_ids.cpu().tolist():
-    #             ssstr = str(i)+'-'+str(j)
-    #             if ssstr not in cur_nums.keys():
-    #                 cur_nums[ssstr] = 1
-    #             else:
-    #                 cur_nums[ssstr] = cur_nums[ssstr]+1
-    #             if nums[ssstr] == cur_nums[ssstr] and nums[ssstr] >= 10:
-    #                 edge_label_index[0].append(i)
-    #                 edge_label_index[1].append(j)
-    #                 attr = 0
-    #                 if nums[ssstr] <= 10:
-    #                     attr = 0
-    #                 elif nums[ssstr] <= 50:
-    #                     attr = 1
-    #                 elif nums[ssstr] <= 250:
-    #                     attr = 2
-    #                 elif nums[ssstr] <= 500:
-    #                     attr = 3
-    #                 else:
-    #                     attr = 4
-    #                 edge_attr.append(attr)
-    #     for a in imp_sx_ids.cpu().tolist():
-    #         # a->b,b->a
-    #         for b in valid_nodes:
-    #             ssstr = str(a)+'-'+str(b)
-    #             if ssstr not in cur_nums.keys():
-    #                     cur_nums[ssstr] = 1
-    #             else:
-    #                 cur_nums[ssstr] = cur_nums[ssstr]+1
-    #             if nums[ssstr] == cur_nums[ssstr] and nums[ssstr] >= 10:
-    #                 edge_label_index[0].append(a)
-    #                 edge_label_index[1].append(b)
-    #                 edge_label_index[1].append(a)
-    #                 edge_label_index[0].append(b)
-    #                 attr = 0
-    #                 if nums[ssstr] <= 10:
-    #                     attr = 0
-    #                 elif nums[ssstr] <= 50:
-    #                     attr = 1
-    #                 elif nums[ssstr] <= 250:
-    #                     attr = 2
-    #                 elif nums[ssstr] <= 500:
-    #                     attr = 3
-    #                 else:
-    #                     attr = 4
-    #                 edge_attr.append(attr)
-    #                 edge_attr.append(attr)
-                    
-    #         valid_nodes.append(a)
     
-    # edge_nums = len(edge_attr)
-    # edge_attr=torch.LongTensor(edge_attr).view(-1,1)
     return data.Data(edge_index=torch.LongTensor(edge_label_index),x=torch.LongTensor(list(range(0,gnn_nodes_num))))
 
 def clean_dxy(train_samples, test_samples, real_prior_feat):
