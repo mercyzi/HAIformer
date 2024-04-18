@@ -19,7 +19,6 @@ record = {}
 train_samples = train_s
 test_samples = test_s
 
-# muzhi:36; mdd:116; mz10:138
 real_prior_feat = prior_feat[:prior_feat_nums]
 
 for i, sample in enumerate(train_samples):
