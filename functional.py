@@ -1,3 +1,5 @@
+# This script originates from Torch. 
+# To build our proposed attention mechanism, we mainly add 566-588 lines
 """Functional interface"""
 from typing import Callable, List, Optional, Tuple, Union
 import math
@@ -423,11 +425,7 @@ def multi_head_attention_forward(
 
         q, k, v = _in_projection(query, key, value, q_proj_weight, k_proj_weight, v_proj_weight, b_q, b_k, b_v)
 
-    # prep attention mask
-    # print(q.size())
-    # graph_score = torch.matmul(graph_score, q.permute(1, 2, 0))/torch.sqrt(torch.tensor(embed_dim, dtype=torch.float32))
-    # print(graph_score.size())
-    # assert 0
+    
     attn_mask = _canonical_mask(
         mask=attn_mask,
         mask_name="attn_mask",
@@ -465,16 +463,7 @@ def multi_head_attention_forward(
     else:
         assert bias_k is None
         assert bias_v is None
-
-
-    # create graph
-
-    # g_data = torch_geometric.data.Data(edge_index=graph_edge, x=q.view(tgt_len*bsz, -1))
-    # print(g_data)
-    # assert 0
-    #
-    # reshape q, k, v for multihead attention and make em batch first
-    #
+        
     q = q.view(tgt_len, bsz * num_heads, head_dim).transpose(0, 1)
     if static_k is None:
         k = k.view(k.shape[0], bsz * num_heads, head_dim).transpose(0, 1)
@@ -590,24 +579,13 @@ def multi_head_attention_forward(
             tensor_with_diagonal = diagonal_matrix.unsqueeze(0).expand(num_heads, -1, -1).unsqueeze(0).expand(bsz, num_heads, src_len, src_len)
             graph_score2 = graph_score_2.expand(bsz, num_heads, src_len, src_len) * tensor_with_diagonal 
             graph_score2[:,4:8] = 0 
-            # print(graph_score2)
-            # assert 0
-        # for ii in range(bsz):
-        #     if 1 in exe_ids3[ii,0,:,:]:
-        #         print(exe_ids3[ii])
-        #         exe_ids3[:,2:4] = 0
-        #         print(exe_ids3[ii])
-        #         assert 0
         
         scores = scores + attn_mask
         if exe_ids is not None:
             scores_copy = scores + exe_ids3 + graph_score2
         else:
             scores_copy = scores
-        #scores_copy2 = attn_mask + graph_score(1-alpha_graph)* 
-        attention_weights = (1-alpha_graph)*  torch.nn.Softmax(dim=-1)(scores) +  alpha_graph * torch.nn.Softmax(dim=-1)(scores_copy) # + alpha_graph * torch.nn.Softmax(dim=-1)(scores_copy2)
-        
-        # attention_weights = torch.nn.Softmax(dim=-1)(scores)
+        attention_weights = (1-alpha_graph)*  torch.nn.Softmax(dim=-1)(scores) +  alpha_graph * torch.nn.Softmax(dim=-1)(scores_copy) 
         
         attn_output = torch.matmul(attention_weights, v)  
         attn_output = attn_output.permute(2, 0, 1, 3).contiguous().view(bsz * tgt_len, embed_dim)
