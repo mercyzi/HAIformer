@@ -1,5 +1,5 @@
 # This script originates from Torch. 
-# To build our proposed attention mechanism, we mainly add 566-588 lines
+# To build our proposed attention mechanism, we mainly add 566-588 lines to modify the 'multi_head_attention_forward' function.
 """Functional interface"""
 from typing import Callable, List, Optional, Tuple, Union
 import math
