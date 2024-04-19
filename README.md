@@ -12,25 +12,25 @@ dxy: End-to-end knowledge-routed relational dialogue system for automatic diagno
 
 muzhi (mz4): Task-oriented dialogue system for automatic diagnosis (ACL 2018)
 
-### Environment Setup:
+### Step 0: Environment Setup
 ```yaml
 conda env create --name HAIformer --file environment.yml
 ```
 
-### Train Symptom-Graph
+### Step 1: Pretrain Symptom-Graph 
 ```yaml
 # dataset: Either MDD, mz10, dxy, muzhi.
 python train_gnn.py \
 -data MDD 
 ```
 
-### Pretrain
+### Step 2: Pretrain 
 ```yaml
 python pretrain.py \
 -data MDD 
 ```
 
-### Train
+### Step 3: Train
 ```yaml
 python train.py \
 -d MDD 
