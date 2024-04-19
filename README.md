@@ -1,6 +1,6 @@
 ## HAIformer
 
-Code for our submission ECAI 2024 ID_249 paper
+Code for our submission: ECAI24_paper_249 
 
 ### Data Source
 
