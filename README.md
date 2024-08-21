@@ -14,7 +14,7 @@ muzhi (mz4): Task-oriented dialogue system for automatic diagnosis (ACL 2018)
 
 ### Step 0: Environment Setup
 ```yaml
-conda env create --name HAIformer --file environment.yml
+conda env create --name HAIformer --file environment.yaml
 ```
 
 ### Step 1: Pretrain Symptom-Graph 
@@ -24,13 +24,13 @@ python train_gnn.py \
 -data MDD 
 ```
 
-### Step 2: Pretrain 
+### Step 2: Pretrain HAIformer
 ```yaml
 python pretrain.py \
 -data MDD 
 ```
 
-### Step 3: Train
+### Step 3: Train HAIformer
 ```yaml
 python train.py \
 -d MDD 
