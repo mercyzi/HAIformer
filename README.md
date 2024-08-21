@@ -1,6 +1,6 @@
 ## HAIformer
 
-Code for our submission: ECAI24_paper_249 
+Code for our paper: 'HAIformer: Human-AI Collaboration Framework for Disease Diagnosis via Doctor-Enhanced Transformer' ECAI 2024
 
 ### Data Source
 
